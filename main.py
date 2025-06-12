@@ -25,7 +25,8 @@ from fastapi.responses import FileResponse
 app = FastAPI()
 app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
 data=[]
-with open("C:\\Users\\ahmad\\Desktop\\lockedin\\src\\data.txt", "r") as file:
+BASE_DIR = os.path.dirname(__file__)
+with open(os.path.join(BASE_DIR, "data.txt"), "r") as file:
     data =[line.strip().split(":") for line in file.readlines()]
     print(data)
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
@@ -682,7 +683,7 @@ def signup(user:str,passw:str,name:str):
     file_entry=f"{name}:{user}:{passw}"
     array_entry=[name,user,passw]
     data.append(array_entry)
-    with open("C:\\Users\\ahmad\\Desktop\\lockedin\\src\\data.txt", "a") as file:
+    with open(os.path.join(BASE_DIR, "data.txt"), "r") as file:
         file.write(f"\n{file_entry}")
 
 class TokenPayload(BaseModel):
