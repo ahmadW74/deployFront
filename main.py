@@ -26,11 +26,11 @@ app = FastAPI()
 app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
 data=[]
 BASE_DIR = os.path.dirname(__file__)
+app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
 with open(os.path.join(BASE_DIR, "data.txt"), "r") as file:
     data =[line.strip().split(":") for line in file.readlines()]
     print(data)
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
-app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
+GOOGLE_CLIENT_ID = '376144524625-v49q48ldo2lm4q6nvtoumehm1s4m7gdr.apps.googleusercontent.com'
 class DNSSECAnalyzer:
     def __init__(self):
         self.resolver = dns.resolver.Resolver()
@@ -660,12 +660,15 @@ def analyze_dnssec_chain(domain: str) -> Dict[str, Any]:
             "error": str(e),
             "domain": domain
         }
-@app.get("/chain/{domain}")
-def get_item(domain:str):
-    return analyze_dnssec_chain(domain)
+
 @app.get("/")
 async def serve_index():
     return FileResponse("dist/index.html")
+
+@app.get("/chain/{domain}")
+def get_item(domain:str):
+    return analyze_dnssec_chain(domain)
+
 @app.get("/login/{user}/{passw}")
 def login(user:str,passw:str):
     entry=f"{user}:{passw}"
@@ -683,7 +686,7 @@ def signup(user:str,passw:str,name:str):
     file_entry=f"{name}:{user}:{passw}"
     array_entry=[name,user,passw]
     data.append(array_entry)
-    with open(os.path.join(BASE_DIR, "data.txt"), "r") as file:
+    with open("C:\\Users\\ahmad\\Desktop\\lockedin\\src\\data.txt", "a") as file:
         file.write(f"\n{file_entry}")
 
 class TokenPayload(BaseModel):
@@ -701,12 +704,13 @@ def google_auth(payload: TokenPayload):
         )
         email = idinfo.get("email")
         name = idinfo.get("name", email)
+        picture = idinfo.get("picture")
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid token")
 
     for entry in data:
         if len(entry) > 1 and entry[1] == email:
-            return {"success": entry[0], "email": email}
+            return {"success": entry[0], "email": email, "picture": picture}
 
     file_entry = f"{name}:{email}:"
     array_entry = [name, email, ""]
@@ -714,6 +718,7 @@ def google_auth(payload: TokenPayload):
     with open("C:\\Users\\ahmad\\Desktop\\lockedin\\src\\data.txt", "a") as file:
         file.write(f"\n{file_entry}")
 
-    return {"success": name, "email": email}
-    
+    return {"success": name, "email": email, "picture": picture}
+
+
 #uvicorn main:app --reload
